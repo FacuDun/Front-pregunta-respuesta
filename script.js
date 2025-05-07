@@ -231,7 +231,7 @@ socket.on("start-answer-phase", (data) => {
     elements.inputs.answer.style.display = gameState.isCurrentAsker ? "none" : "block";
     elements.buttons.submitAnswer.style.display = gameState.isCurrentAsker ? "none" : "block";
     elements.displays.answerTimeLeft.textContent = gameState.isCurrentAsker 
-        ? "Eres el autor de la pregunta" 
+        ? "Eres el autor de la pregunta, no respondes esta ronda" 
         : "30";
     
     toggleScreen("question", false);
