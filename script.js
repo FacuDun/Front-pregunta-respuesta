@@ -1,4 +1,4 @@
-const socket = io("MODIFICIARRRRRR"); // Conexión al servidor Socket.io
+const socket = io("https://back-preguntas-respuestas.onrender.com"); // Conexión al servidor Socket.io
 
 // Elementos del DOM
 const loginScreen = document.getElementById("login-screen");
