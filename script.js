@@ -1,4 +1,4 @@
-const socket = io("https://back-preguntas-respuestas.onrender.com"); // Conexión al servidor Socket.io
+const socket = io("https://back-preguntas-respuestas.onrender.com");
 
 // Elementos del DOM
 const loginScreen = document.getElementById("login-screen");
@@ -22,12 +22,16 @@ const answersList = document.getElementById("answers-list");
 const rankedAnswers = document.getElementById("ranked-answers");
 const scoreboard = document.getElementById("scoreboard");
 const finalScoreboard = document.getElementById("final-scoreboard");
+const submitQuestionBtn = document.getElementById("submit-question-btn");
+const submitAnswerBtn = document.getElementById("submit-answer-btn");
 
 let username = "";
 let currentQuestion = "";
 let answers = [];
 let players = [];
 let scores = {};
+let questionTimer;
+let answerTimer;
 
 // Unirse al juego
 joinButton.addEventListener("click", () => {
@@ -44,23 +48,39 @@ startButton.addEventListener("click", () => {
     socket.emit("start-game");
 });
 
+// Enviar pregunta
+submitQuestionBtn.addEventListener("click", () => {
+    const question = questionInput.value.trim();
+    if (question) {
+        socket.emit("submit-question", question);
+        clearInterval(questionTimer);
+        submitQuestionBtn.disabled = true;
+    }
+});
+
+// Enviar respuesta
+submitAnswerBtn.addEventListener("click", () => {
+    const answer = answerInput.value.trim();
+    if (answer) {
+        socket.emit("submit-answer", answer);
+        clearInterval(answerTimer);
+        submitAnswerBtn.disabled = true;
+    }
+});
+
 // Escuchar actualizaciones del servidor
 socket.on("update-lobby", (playersListData) => {
     players = playersListData;
     playersList.innerHTML = players.map(p => `<li>${p.name} ${p.isAdmin ? "(Admin)" : ""}</li>`).join("");
-    
-    // Mostrar botón de inicio solo si el usuario es Facu
     startButton.classList.toggle("hidden", username !== "Facu");
 });
 
 socket.on("start-question-phase", () => {
     lobbyScreen.classList.add("hidden");
     questionScreen.classList.remove("hidden");
-    startTimer(60, timeLeftDisplay, () => {
-        if (questionInput.value.trim()) {
-            socket.emit("submit-question", questionInput.value.trim());
-        }
-    });
+    questionInput.value = "";
+    submitQuestionBtn.disabled = false;
+    startQuestionTimer();
 });
 
 socket.on("start-answer-phase", (question) => {
@@ -68,11 +88,9 @@ socket.on("start-answer-phase", (question) => {
     questionScreen.classList.add("hidden");
     answerScreen.classList.remove("hidden");
     currentQuestionDisplay.textContent = question;
-    startTimer(30, answerTimeLeftDisplay, () => {
-        if (answerInput.value.trim()) {
-            socket.emit("submit-answer", answerInput.value.trim());
-        }
-    });
+    answerInput.value = "";
+    submitAnswerBtn.disabled = false;
+    startAnswerTimer();
 });
 
 socket.on("start-vote-phase", (answersData) => {
@@ -82,7 +100,7 @@ socket.on("start-vote-phase", (answersData) => {
     answersList.innerHTML = answers.map((a, i) => `
         <div>
             <p>${a.text}</p>
-            <button onclick="socket.emit('vote', ${i})">Votar</button>
+            <button onclick="voteForAnswer(${i})">Votar</button>
         </div>
     `).join("");
 });
@@ -111,16 +129,42 @@ socket.on("game-over", (finalScores) => {
         .join("");
 });
 
-// Función para temporizador
-function startTimer(seconds, displayElement, onEnd) {
-    let timeLeft = seconds;
-    displayElement.textContent = timeLeft;
-    const timer = setInterval(() => {
-        timeLeft--;
-        displayElement.textContent = timeLeft;
-        if (timeLeft <= 0) {
-            clearInterval(timer);
-            onEnd();
+// Funciones de timer
+function startQuestionTimer() {
+    let time = 60;
+    timeLeftDisplay.textContent = time;
+    questionTimer = setInterval(() => {
+        time--;
+        timeLeftDisplay.textContent = time;
+        if (time <= 0) {
+            clearInterval(questionTimer);
+            const question = questionInput.value.trim();
+            if (question) {
+                socket.emit("submit-question", question);
+                submitQuestionBtn.disabled = true;
+            }
         }
     }, 1000);
 }
+
+function startAnswerTimer() {
+    let time = 30;
+    answerTimeLeftDisplay.textContent = time;
+    answerTimer = setInterval(() => {
+        time--;
+        answerTimeLeftDisplay.textContent = time;
+        if (time <= 0) {
+            clearInterval(answerTimer);
+            const answer = answerInput.value.trim();
+            if (answer) {
+                socket.emit("submit-answer", answer);
+                submitAnswerBtn.disabled = true;
+            }
+        }
+    }, 1000);
+}
+
+// Función global para votar
+window.voteForAnswer = (index) => {
+    socket.emit("vote", index);
+};
