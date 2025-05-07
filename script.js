@@ -130,7 +130,7 @@ function resetAnswerState() {
     if (gameState.isCurrentAsker) {
         elements.inputs.answer.style.display = "none";
         elements.buttons.submitAnswer.style.display = "none";
-        elements.displays.answerTimeLeft.textContent = "Eres el autor de la pregunta, no respondes esta ronda";
+        elements.displays.answerTimeLeft.textContent = "Eres el autor de la pregunta, no respondes en esta ronda";
     } else {
         elements.inputs.answer.style.display = "block";
         elements.buttons.submitAnswer.style.display = "block";
