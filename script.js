@@ -190,7 +190,7 @@ function updateScoreboard(scoresData) {
     gameState.scores = scoresData;
     elements.displays.scoreboard.innerHTML = Object.entries(scoresData)
         .sort((a, b) => b[1] - a[1])
-        .map(([name, points]) => `<p>${name}: ${points} puntos</p>`)
+        .map(([name, points]) => `<p><strong>${name}:</strong> ${points} puntos</p>`)
         .join("");
 }
 
