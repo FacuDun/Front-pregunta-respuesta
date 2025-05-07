@@ -186,11 +186,29 @@ function startQuestionTimer() {
 }
 
 function startAnswerTimer() {
-    startTimer("answer", 30, elements.displays.answerTimeLeft, () => {
-        if (elements.inputs.answer.value.trim() && !gameState.isCurrentAsker) {
-            submitAnswer();
+    // Limpiar timer existente primero
+    clearTimer("answer");
+    
+    let time = 30;
+    elements.displays.answerTimeLeft.textContent = time;
+    elements.displays.answerTimeLeft.style.color = (time <= 5) ? "red" : ""; // Rojo si queda poco tiempo
+    
+    gameState.timers.answer = setInterval(() => {
+        time--;
+        elements.displays.answerTimeLeft.textContent = Math.max(0, time); // Nunca negativo
+        
+        // Cambiar color cuando quedan 5 segundos
+        if (time === 5) {
+            elements.displays.answerTimeLeft.style.color = "red";
         }
-    });
+        
+        if (time <= 0) {
+            clearTimer("answer");
+            if (!gameState.hasSubmitted.answer) {
+                submitAnswer(); // Enviar automáticamente si hay texto
+            }
+        }
+    }, 1000);
 }
 
 // ==================== ACTUALIZACIÓN DE UI ====================
