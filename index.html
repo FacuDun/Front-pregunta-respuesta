@@ -26,7 +26,9 @@
         <div id="question-screen" class="screen hidden">
             <h1>Escribe tu pregunta:</h1>
             <textarea id="question-input" placeholder="Tu pregunta..."></textarea>
-            <button id="submit-question-btn">Enviar Pregunta</button>
+            <div class="button-container">
+                <button id="submit-question-btn" class="submit-btn">Enviar Pregunta</button>
+            </div>
             <p>Tiempo restante: <span id="time-left">60</span>s</p>
         </div>
 
@@ -34,7 +36,9 @@
         <div id="answer-screen" class="screen hidden">
             <h1 id="current-question"></h1>
             <textarea id="answer-input" placeholder="Tu respuesta..."></textarea>
-            <button id="submit-answer-btn">Enviar Respuesta</button>
+            <div class="button-container">
+                <button id="submit-answer-btn" class="submit-btn">Enviar Respuesta</button>
+            </div>
             <p>Tiempo restante: <span id="answer-time-left">30</span>s</p>
         </div>
 
