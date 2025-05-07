@@ -86,6 +86,12 @@ function submitAnswer() {
         gameState.hasSubmitted.answer = true;
         updateButtonState("submitAnswer", true, "✓ Enviado");
         clearTimer("answer");
+        
+        // Reiniciar estado para próxima ronda
+        setTimeout(() => {
+            gameState.hasSubmitted.answer = false;
+            updateButtonState("submitAnswer", false, "Enviar Respuesta");
+        }, 10000); // Coincide con el tiempo entre rondas
     }
 }
 
@@ -209,33 +215,54 @@ socket.on("start-question-phase", () => {
 });
 
 socket.on("start-answer-phase", (data) => {
+    // Reiniciar estado para nueva ronda
+    gameState.hasSubmitted.answer = false;
     gameState.currentQuestion = data.question;
     gameState.questionAuthor = data.questionAuthor;
     gameState.isCurrentAsker = socket.id === data.questionAuthor;
+    
+    // Ocultar resultados de ronda anterior
+    toggleScreen("results", false);
+    
     elements.displays.currentQuestion.textContent = data.question;
-    resetAnswerState();
+    
+    // Configurar pantalla de respuesta
+    elements.inputs.answer.value = "";
+    elements.inputs.answer.style.display = gameState.isCurrentAsker ? "none" : "block";
+    elements.buttons.submitAnswer.style.display = gameState.isCurrentAsker ? "none" : "block";
+    elements.displays.answerTimeLeft.textContent = gameState.isCurrentAsker 
+        ? "Eres el autor de la pregunta" 
+        : "30";
+    
+    toggleScreen("question", false);
+    toggleScreen("answer", true);
+    
+    if (!gameState.isCurrentAsker) {
+        startAnswerTimer();
+    }
 });
 
 socket.on("start-vote-phase", (data) => {
     gameState.answers = data.answers;
     gameState.hasSubmitted.vote = false;
-    gameState.isCurrentAsker = socket.id === data.questionAuthor;
-    toggleScreen("answer", false);
-    toggleScreen("vote", true);
     
-    // Restaurar visibilidad para próximas rondas
-    elements.inputs.answer.style.display = "block";
-    elements.buttons.submitAnswer.style.display = "block";
-    
+    // Mostrar todas las respuestas y permitir votar a todos (incluyendo al autor de la pregunta)
     elements.displays.answers.innerHTML = data.answers.map((a, i) => `
         <div class="answer-item">
             <p>${a.text}</p>
-            ${!gameState.isCurrentAsker ? `<button onclick="voteForAnswer(${i})" class="vote-btn">Votar</button>` : ''}
+            <button onclick="voteForAnswer(${i})" class="vote-btn">Votar</button>
         </div>
     `).join("");
+    
+    toggleScreen("answer", false);
+    toggleScreen("vote", true);
+    
+    // Iniciar timer de votación
+    startVoteTimer();
 });
 
 socket.on("show-results", (data) => {
+    // Mostrar resultados
     toggleScreen("vote", false);
     toggleScreen("results", true);
     
@@ -244,7 +271,33 @@ socket.on("show-results", (data) => {
     `).join("");
     
     updateScoreboard(data.scores);
+    
+    // Ocultar después de 5 segundos (solo si no es la última ronda)
+    setTimeout(() => {
+        if (elements.screens.results.classList.contains("hidden")) return;
+        toggleScreen("results", false);
+    }, 5000);
 });
+
+function startVoteTimer() {
+    let time = 60;
+    const timerDisplay = document.createElement("p");
+    timerDisplay.innerHTML = `Tiempo para votar: <span id="vote-time">${time}</span>s`;
+    elements.displays.answers.prepend(timerDisplay);
+    
+    gameState.timers.vote = setInterval(() => {
+        time--;
+        document.getElementById("vote-time").textContent = time;
+        
+        if (time <= 0) {
+            clearInterval(gameState.timers.vote);
+            // Auto-votar si no lo ha hecho
+            if (!gameState.hasSubmitted.vote) {
+                voteForAnswer(0); // Vota la primera respuesta por defecto
+            }
+        }
+    }, 1000);
+}
 
 socket.on("game-over", (finalScores) => {
     toggleScreen("results", false);
