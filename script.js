@@ -38,6 +38,7 @@ const elements = {
 const gameState = {
     username: "",
     currentQuestion: "",
+    questionAuthor: "",
     answers: [],
     players: [],
     scores: {},
@@ -50,7 +51,8 @@ const gameState = {
         question: false,
         answer: false,
         vote: false
-    }
+    },
+    isCurrentAsker: false
 };
 
 // ==================== FUNCIONES PRINCIPALES ====================
@@ -79,7 +81,7 @@ function submitQuestion() {
 
 function submitAnswer() {
     const answer = elements.inputs.answer.value.trim();
-    if (answer && !gameState.hasSubmitted.answer) {
+    if (answer && !gameState.hasSubmitted.answer && !gameState.isCurrentAsker) {
         socket.emit("submit-answer", answer);
         gameState.hasSubmitted.answer = true;
         updateButtonState("submitAnswer", true, "✓ Enviado");
@@ -88,7 +90,7 @@ function submitAnswer() {
 }
 
 function voteForAnswer(index) {
-    if (!gameState.hasSubmitted.vote) {
+    if (!gameState.hasSubmitted.vote && !gameState.isCurrentAsker) {
         socket.emit("vote", index);
         gameState.hasSubmitted.vote = true;
         // Deshabilitar todos los botones de votación
@@ -108,6 +110,7 @@ function resetQuestionState() {
     toggleScreen("question", true);
     elements.inputs.question.value = "";
     gameState.hasSubmitted.question = false;
+    gameState.isCurrentAsker = false;
     updateButtonState("submitQuestion", false, "Enviar Pregunta");
 }
 
@@ -116,7 +119,17 @@ function resetAnswerState() {
     toggleScreen("answer", true);
     elements.inputs.answer.value = "";
     gameState.hasSubmitted.answer = false;
-    updateButtonState("submitAnswer", false, "Enviar Respuesta");
+    
+    // Mostrar/ocultar elementos según si es el asker
+    if (gameState.isCurrentAsker) {
+        elements.inputs.answer.style.display = "none";
+        elements.buttons.submitAnswer.style.display = "none";
+        elements.displays.answerTimeLeft.textContent = "Eres el autor de la pregunta, no respondes esta ronda";
+    } else {
+        elements.inputs.answer.style.display = "block";
+        elements.buttons.submitAnswer.style.display = "block";
+        startAnswerTimer();
+    }
 }
 
 // ==================== TIMERS ====================
@@ -154,7 +167,7 @@ function startQuestionTimer() {
 
 function startAnswerTimer() {
     startTimer("answer", 30, elements.displays.answerTimeLeft, () => {
-        if (elements.inputs.answer.value.trim()) {
+        if (elements.inputs.answer.value.trim() && !gameState.isCurrentAsker) {
             submitAnswer();
         }
     });
@@ -167,8 +180,9 @@ function updateButtonState(buttonName, disabled, text) {
     button.textContent = text;
 }
 
-function updateScoreboard(scores) {
-    elements.displays.scoreboard.innerHTML = Object.entries(scores)
+function updateScoreboard(scoresData) {
+    gameState.scores = scoresData;
+    elements.displays.scoreboard.innerHTML = Object.entries(scoresData)
         .sort((a, b) => b[1] - a[1])
         .map(([name, points]) => `<p>${name}: ${points} puntos</p>`)
         .join("");
@@ -194,37 +208,42 @@ socket.on("start-question-phase", () => {
     startQuestionTimer();
 });
 
-socket.on("start-answer-phase", (question) => {
-    gameState.currentQuestion = question;
+socket.on("start-answer-phase", (data) => {
+    gameState.currentQuestion = data.question;
+    gameState.questionAuthor = data.questionAuthor;
+    gameState.isCurrentAsker = socket.id === data.questionAuthor;
+    elements.displays.currentQuestion.textContent = data.question;
     resetAnswerState();
-    elements.displays.currentQuestion.textContent = question;
-    startAnswerTimer();
 });
 
-socket.on("start-vote-phase", (answers) => {
-    gameState.answers = answers;
+socket.on("start-vote-phase", (data) => {
+    gameState.answers = data.answers;
     gameState.hasSubmitted.vote = false;
+    gameState.isCurrentAsker = socket.id === data.questionAuthor;
     toggleScreen("answer", false);
     toggleScreen("vote", true);
     
-    elements.displays.answers.innerHTML = answers.map((a, i) => `
+    // Restaurar visibilidad para próximas rondas
+    elements.inputs.answer.style.display = "block";
+    elements.buttons.submitAnswer.style.display = "block";
+    
+    elements.displays.answers.innerHTML = data.answers.map((a, i) => `
         <div class="answer-item">
             <p>${a.text}</p>
-            <button onclick="voteForAnswer(${i})" class="vote-btn">Votar</button>
+            ${!gameState.isCurrentAsker ? `<button onclick="voteForAnswer(${i})" class="vote-btn">Votar</button>` : ''}
         </div>
     `).join("");
 });
 
-socket.on("show-results", (rankedAnswers, scores) => {
-    gameState.scores = scores;
+socket.on("show-results", (data) => {
     toggleScreen("vote", false);
     toggleScreen("results", true);
     
-    elements.displays.rankedAnswers.innerHTML = rankedAnswers.map((a, i) => `
+    elements.displays.rankedAnswers.innerHTML = data.rankedAnswers.map((a, i) => `
         <p>${i + 1}. ${a.text} (${a.votes} votos)</p>
     `).join("");
     
-    updateScoreboard(scores);
+    updateScoreboard(data.scores);
 });
 
 socket.on("game-over", (finalScores) => {
