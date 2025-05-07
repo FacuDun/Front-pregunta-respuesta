@@ -39,9 +39,14 @@ button:hover {
 }
 
 textarea {
-    width: 90%;
-    padding: 10px;
-    margin: 10px 0;
-    border-radius: 5px;
+    width: calc(100% - 24px); /* Resta el padding y bordes del ancho total */
+    padding: 12px;
+    margin: 15px 0;
+    border-radius: 8px;
     border: 1px solid #ccc;
+    font-family: Arial, sans-serif;
+    font-size: 16px;
+    resize: vertical; /* Permite redimensionar solo verticalmente */
+    min-height: 120px; /* Altura mínima inicial */
+    box-sizing: border-box; /* Incluye padding en el ancho total */
 }
