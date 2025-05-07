@@ -96,7 +96,7 @@ function submitAnswer() {
 }
 
 function voteForAnswer(index) {
-    if (!gameState.hasSubmitted.vote && !gameState.isCurrentAsker) {
+    if (!gameState.hasSubmitted.vote) {  // Eliminamos !gameState.isCurrentAsker
         socket.emit("vote", index);
         gameState.hasSubmitted.vote = true;
         // Deshabilitar todos los botones de votación
