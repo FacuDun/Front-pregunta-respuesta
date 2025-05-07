@@ -117,3 +117,23 @@ textarea {
     width: auto;
     margin: 5px 0 0 0;
 }
+
+.answer-item {
+    margin: 10px 0;
+    padding: 10px;
+    background: #f9f9f9;
+    border-radius: 5px;
+}
+
+.vote-btn {
+    background: #4CAF50;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 3px;
+    cursor: pointer;
+}
+
+.vote-btn:disabled {
+    background: #cccccc;
+}
