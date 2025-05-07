@@ -78,6 +78,41 @@ textarea {
     border-radius: 5px;
 }
 
+/* Agrega esto al final */
+.button-container {
+    margin: 20px 0;
+    text-align: center;
+}
+
+.submit-btn {
+    background: #4CAF50;
+    color: white;
+    border: none;
+    padding: 12px 25px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: all 0.3s;
+    width: auto;
+    display: inline-block;
+}
+
+.submit-btn:hover {
+    background: #45a049;
+    transform: translateY(-2px);
+}
+
+.submit-btn:disabled {
+    background: #cccccc;
+    cursor: not-allowed;
+    transform: none;
+}
+
+#question-input, #answer-input {
+    min-height: 150px;
+    margin-bottom: 10px;
+}
+
 #answers-list button {
     width: auto;
     margin: 5px 0 0 0;
