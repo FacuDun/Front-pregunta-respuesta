@@ -138,6 +138,16 @@ function resetAnswerState() {
     }
 }
 
+socket.on("voting-completed", () => {
+    clearTimer("vote"); // Detiene el timer inmediatamente
+    
+    // Opcional: Mostrar mensaje
+    const timerDisplay = document.getElementById("vote-time");
+    if (timerDisplay) {
+        timerDisplay.textContent = "Votación completada!";
+    }
+});
+
 // ==================== TIMERS ====================
 function startTimer(type, duration, displayElement, onEnd) {
     let time = duration;
@@ -158,7 +168,11 @@ function startTimer(type, duration, displayElement, onEnd) {
 
 function clearTimer(type) {
     if (gameState.timers[type]) {
-        clearInterval(gameState.timers[type]);
+        clearInterval(gameState.timers[type].interval);
+        // Opcional: Limpiar el display
+        if (gameState.timers[type].display) {
+            gameState.timers[type].display.remove();
+        }
         gameState.timers[type] = null;
     }
 }
@@ -280,23 +294,27 @@ socket.on("show-results", (data) => {
 });
 
 function startVoteTimer() {
-    let time = 60;
+    let time = 30; // Reducido a 30 segundos para mejor UX
     const timerDisplay = document.createElement("p");
     timerDisplay.innerHTML = `Tiempo para votar: <span id="vote-time">${time}</span>s`;
     elements.displays.answers.prepend(timerDisplay);
     
-    gameState.timers.vote = setInterval(() => {
-        time--;
-        document.getElementById("vote-time").textContent = time;
-        
-        if (time <= 0) {
-            clearInterval(gameState.timers.vote);
-            // Auto-votar si no lo ha hecho
-            if (!gameState.hasSubmitted.vote) {
-                voteForAnswer(0); // Vota la primera respuesta por defecto
+    // Guardamos el timer en el gameState
+    gameState.timers.vote = {
+        interval: setInterval(() => {
+            time--;
+            document.getElementById("vote-time").textContent = time;
+            
+            if (time <= 0) {
+                clearTimer("vote");
+                // Opcional: auto-votar si no lo han hecho
+                if (!gameState.hasSubmitted.vote) {
+                    voteForAnswer(0);
+                }
             }
-        }
-    }, 1000);
+        }, 1000),
+        display: timerDisplay
+    };
 }
 
 socket.on("game-over", (finalScores) => {
