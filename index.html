@@ -3,65 +3,89 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Juego de Preguntas con Amigos</title>
+    <title>Juego de Preguntas y Respuestas</title>
     <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
 </head>
 <body>
     <div id="app">
         <!-- Pantalla de inicio -->
-        <div id="login-screen" class="screen">
-            <h1>Ingresa tu nombre</h1>
-            <input type="text" id="username-input" placeholder="Tu nombre">
-            <button id="join-button">Unirse</button>
+        <div id="join-screen" class="screen">
+            <h1>Juego de Preguntas y Respuestas</h1>
+            <input type="text" id="player-name" placeholder="Ingresa tu nombre">
+            <button id="join-btn">Unirse al juego</button>
+            <p id="name-taken" class="error-message">Nombre ya en uso. Por favor elige otro.</p>
         </div>
 
-        <!-- Lobby (espera) -->
-        <div id="lobby-screen" class="screen hidden">
-            <h1>Esperando jugadores...</h1>
-            <div id="players-list"></div>
-            <button id="start-button" class="hidden">Iniciar Partida</button>
+        <!-- Sala de espera -->
+        <div id="waiting-screen" class="screen hidden">
+            <h2>Sala de espera</h2>
+            <div id="players-list">
+                <h3>Jugadores conectados:</h3>
+                <ul id="players"></ul>
+            </div>
+            <button id="start-game-btn" class="hidden">Iniciar partida</button>
         </div>
 
-        <!-- Pantalla de pregunta -->
+        <!-- Fase de pregunta -->
         <div id="question-screen" class="screen hidden">
-            <h1>Escribe tu pregunta:</h1>
-            <textarea id="question-input" placeholder="Tu pregunta..."></textarea>
-            <div class="button-container">
-                <button id="submit-question-btn" class="submit-btn">Enviar Pregunta</button>
-            </div>
-            <p>Tiempo restante: <span id="time-left">60</span></p>
+            <h2>Escribe tu pregunta</h2>
+            <p>Tiempo restante: <span id="question-timer">60</span>s</p>
+            <textarea id="question-input" placeholder="Escribe tu pregunta aquí..."></textarea>
+            <button id="submit-question-btn">Enviar pregunta</button>
         </div>
 
-        <!-- Pantalla de respuesta -->
+        <!-- Fase de respuesta -->
         <div id="answer-screen" class="screen hidden">
-            <h1 id="current-question"></h1>
-            <textarea id="answer-input" placeholder="Tu respuesta..."></textarea>
-            <div class="button-container">
-                <button id="submit-answer-btn" class="submit-btn">Enviar Respuesta</button>
-            </div>
-            <p>Tiempo restante: <span id="answer-time-left">30</span></p>
+            <h2>Responde la pregunta</h2>
+            <p>Tiempo restante: <span id="answer-timer">30</span>s</p>
+            <div id="current-question"></div>
+            <textarea id="answer-input" placeholder="Escribe tu respuesta aquí..."></textarea>
+            <button id="submit-answer-btn">Enviar respuesta</button>
         </div>
 
-        <!-- Pantalla de votación -->
+        <!-- Fase de votación -->
         <div id="vote-screen" class="screen hidden">
-            <h1>Vota por la mejor respuesta:</h1>
-            <div id="answers-list"></div>
+            <h2>Vota por la mejor respuesta</h2>
+            <p>Tiempo restante: <span id="vote-timer">30</span>s</p>
+            <div id="answers-to-vote"></div>
         </div>
 
-        <!-- Resultados de ronda -->
+        <!-- Fase de resultados -->
         <div id="results-screen" class="screen hidden">
-            <h1>Resultados:</h1>
+            <h2>Resultados</h2>
             <div id="ranked-answers"></div>
-            <div id="scoreboard"></div>
+            <div id="scoreboard">
+                <h3>Tabla de puntajes</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Jugador</th>
+                            <th>Puntos</th>
+                        </tr>
+                    </thead>
+                    <tbody id="scoreboard-body"></tbody>
+                </table>
+            </div>
         </div>
 
         <!-- Fin del juego -->
         <div id="game-over-screen" class="screen hidden">
-            <h1>¡Juego terminado!</h1>
-            <div id="final-scoreboard"></div>
+            <h2>¡Juego terminado!</h2>
+            <div id="final-scoreboard">
+                <h3>Resultados finales</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Jugador</th>
+                            <th>Puntos</th>
+                        </tr>
+                    </thead>
+                    <tbody id="final-scoreboard-body"></tbody>
+                </table>
+            </div>
         </div>
     </div>
-    <script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
