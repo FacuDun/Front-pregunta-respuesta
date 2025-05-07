@@ -1,312 +1,251 @@
-const socket = io("https://back-preguntas-respuestas.onrender.com");
-
-// ==================== ELEMENTOS DEL DOM ====================
-const elements = {
-    screens: {
-        login: document.getElementById("login-screen"),
-        lobby: document.getElementById("lobby-screen"),
-        question: document.getElementById("question-screen"),
-        answer: document.getElementById("answer-screen"),
-        vote: document.getElementById("vote-screen"),
-        results: document.getElementById("results-screen"),
-        gameOver: document.getElementById("game-over-screen")
-    },
-    inputs: {
-        username: document.getElementById("username-input"),
-        question: document.getElementById("question-input"),
-        answer: document.getElementById("answer-input")
-    },
-    displays: {
-        players: document.getElementById("players-list"),
-        timeLeft: document.getElementById("time-left"),
-        answerTimeLeft: document.getElementById("answer-time-left"),
-        currentQuestion: document.getElementById("current-question"),
-        answers: document.getElementById("answers-list"),
-        rankedAnswers: document.getElementById("ranked-answers"),
-        scoreboard: document.getElementById("scoreboard"),
-        finalScoreboard: document.getElementById("final-scoreboard")
-    },
-    buttons: {
-        join: document.getElementById("join-button"),
-        start: document.getElementById("start-button"),
-        submitQuestion: document.getElementById("submit-question-btn"),
-        submitAnswer: document.getElementById("submit-answer-btn")
-    }
-};
-
-// ==================== ESTADO DEL JUEGO ====================
-const gameState = {
-    username: "",
-    currentQuestion: "",
-    questionAuthor: "",
-    answers: [],
-    players: [],
-    scores: {},
-    timers: {
-        question: null,
-        answer: null,
-        vote: null
-    },
-    hasSubmitted: {
-        question: false,
-        answer: false,
-        vote: false
-    },
-    isCurrentAsker: false
-};
-
-// ==================== FUNCIONES PRINCIPALES ====================
-function joinGame() {
-    gameState.username = elements.inputs.username.value.trim();
-    if (gameState.username) {
-        socket.emit("join", gameState.username);
-        toggleScreen("login", false);
-        toggleScreen("lobby", true);
-    }
-}
-
-function startGame() {
-    socket.emit("start-game");
-}
-
-function submitQuestion() {
-    const question = elements.inputs.question.value.trim();
-    if (question && !gameState.hasSubmitted.question) {
-        socket.emit("submit-question", question);
-        gameState.hasSubmitted.question = true;
-        updateButtonState("submitQuestion", true, "✓ Enviado");
-        clearTimer("question");
-    }
-}
-
-function submitAnswer() {
-    const answer = elements.inputs.answer.value.trim();
-    if (answer && !gameState.hasSubmitted.answer && !gameState.isCurrentAsker) {
-        socket.emit("submit-answer", answer);
-        gameState.hasSubmitted.answer = true;
-        updateButtonState("submitAnswer", true, "✓ Enviado");
-        clearTimer("answer");
-        
-        // Reiniciar estado para próxima ronda
-        setTimeout(() => {
-            gameState.hasSubmitted.answer = false;
-            updateButtonState("submitAnswer", false, "Enviar Respuesta");
-        }, 10000); // Coincide con el tiempo entre rondas
-    }
-}
-
-function voteForAnswer(index) {
-    if (!gameState.hasSubmitted.vote && !gameState.isCurrentAsker) {
-        socket.emit("vote", index);
-        gameState.hasSubmitted.vote = true;
-        // Deshabilitar todos los botones de votación
-        document.querySelectorAll('.vote-btn').forEach(btn => {
-            btn.disabled = true;
-        });
-    }
-}
-
-// ==================== MANEJO DE PANTALLAS ====================
-function toggleScreen(screenName, show) {
-    elements.screens[screenName].classList.toggle("hidden", !show);
-}
-
-function resetQuestionState() {
-    toggleScreen("lobby", false);
-    toggleScreen("question", true);
-    elements.inputs.question.value = "";
-    gameState.hasSubmitted.question = false;
-    gameState.isCurrentAsker = false;
-    updateButtonState("submitQuestion", false, "Enviar Pregunta");
-}
-
-function resetAnswerState() {
-    toggleScreen("question", false);
-    toggleScreen("answer", true);
-    elements.inputs.answer.value = "";
-    gameState.hasSubmitted.answer = false;
+document.addEventListener('DOMContentLoaded', () => {
+    // Elementos del DOM
+    const joinScreen = document.getElementById('join-screen');
+    const waitingScreen = document.getElementById('waiting-screen');
+    const questionScreen = document.getElementById('question-screen');
+    const answerScreen = document.getElementById('answer-screen');
+    const voteScreen = document.getElementById('vote-screen');
+    const resultsScreen = document.getElementById('results-screen');
+    const gameOverScreen = document.getElementById('game-over-screen');
     
-    // Mostrar/ocultar elementos según si es el asker
-    if (gameState.isCurrentAsker) {
-        elements.inputs.answer.style.display = "none";
-        elements.buttons.submitAnswer.style.display = "none";
-        elements.displays.answerTimeLeft.textContent = "Eres el autor de la pregunta, no respondes en esta ronda";
-    } else {
-        elements.inputs.answer.style.display = "block";
-        elements.buttons.submitAnswer.style.display = "block";
-        startAnswerTimer();
-    }
-}
-
-// ==================== TIMERS ====================
-function startTimer(type, duration, displayElement, onEnd) {
-    let time = duration;
-    displayElement.textContent = time;
+    const playerNameInput = document.getElementById('player-name');
+    const joinBtn = document.getElementById('join-btn');
+    const nameTakenMsg = document.getElementById('name-taken');
+    const playersList = document.getElementById('players');
+    const startGameBtn = document.getElementById('start-game-btn');
     
-    gameState.timers[type] = setInterval(() => {
-        time--;
-        displayElement.textContent = time;
-        
-        if (time <= 0 || gameState.hasSubmitted[type]) {
-            clearTimer(type);
-            if (!gameState.hasSubmitted[type]) {
-                onEnd();
-            }
-        }
-    }, 1000);
-}
-
-function clearTimer(type) {
-    if (gameState.timers[type]) {
-        clearInterval(gameState.timers[type]);
-        gameState.timers[type] = null;
-    }
-}
-
-function startQuestionTimer() {
-    startTimer("question", 60, elements.displays.timeLeft, () => {
-        if (elements.inputs.question.value.trim()) {
+    const questionInput = document.getElementById('question-input');
+    const submitQuestionBtn = document.getElementById('submit-question-btn');
+    const questionTimer = document.getElementById('question-timer');
+    
+    const currentQuestion = document.getElementById('current-question');
+    const answerInput = document.getElementById('answer-input');
+    const submitAnswerBtn = document.getElementById('submit-answer-btn');
+    const answerTimer = document.getElementById('answer-timer');
+    
+    const answersToVote = document.getElementById('answers-to-vote');
+    const voteTimer = document.getElementById('vote-timer');
+    
+    const rankedAnswers = document.getElementById('ranked-answers');
+    const scoreboardBody = document.getElementById('scoreboard-body');
+    const finalScoreboardBody = document.getElementById('final-scoreboard-body');
+    
+    // Conexión Socket.io
+    const socket = io("https://back-preguntas-respuestas.onrender.com");
+    
+    // Variables de estado
+    let playerName = '';
+    let isAdmin = false;
+    let currentPhase = '';
+    
+    // Event listeners
+    joinBtn.addEventListener('click', joinGame);
+    startGameBtn.addEventListener('click', startGame);
+    submitQuestionBtn.addEventListener('click', submitQuestion);
+    submitAnswerBtn.addEventListener('click', submitAnswer);
+    playerNameInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') joinGame();
+    });
+    questionInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
             submitQuestion();
         }
     });
-}
-
-function startAnswerTimer() {
-    startTimer("answer", 30, elements.displays.answerTimeLeft, () => {
-        if (elements.inputs.answer.value.trim() && !gameState.isCurrentAsker) {
+    answerInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
             submitAnswer();
         }
     });
-}
-
-// ==================== ACTUALIZACIÓN DE UI ====================
-function updateButtonState(buttonName, disabled, text) {
-    const button = elements.buttons[buttonName];
-    button.disabled = disabled;
-    button.textContent = text;
-}
-
-function updateScoreboard(scoresData) {
-    gameState.scores = scoresData;
-    elements.displays.scoreboard.innerHTML = Object.entries(scoresData)
-        .sort((a, b) => b[1] - a[1])
-        .map(([name, points]) => `<p>${name}: ${points} puntos</p>`)
-        .join("");
-}
-
-// ==================== EVENT LISTENERS ====================
-elements.buttons.join.addEventListener("click", joinGame);
-elements.buttons.start.addEventListener("click", startGame);
-elements.buttons.submitQuestion.addEventListener("click", submitQuestion);
-elements.buttons.submitAnswer.addEventListener("click", submitAnswer);
-
-// ==================== SOCKET LISTENERS ====================
-socket.on("update-lobby", (players) => {
-    gameState.players = players;
-    elements.displays.players.innerHTML = players.map(p => 
-        `<li>${p.name} ${p.isAdmin ? "(Admin)" : ""}</li>`
-    ).join("");
-    elements.buttons.start.classList.toggle("hidden", gameState.username !== "Facu");
-});
-
-socket.on("start-question-phase", () => {
-    resetQuestionState();
-    startQuestionTimer();
-});
-
-socket.on("start-answer-phase", (data) => {
-    // Reiniciar estado para nueva ronda
-    gameState.hasSubmitted.answer = false;
-    gameState.currentQuestion = data.question;
-    gameState.questionAuthor = data.questionAuthor;
-    gameState.isCurrentAsker = socket.id === data.questionAuthor;
     
-    // Ocultar resultados de ronda anterior
-    toggleScreen("results", false);
+    // Socket.io listeners
+    socket.on('nameTaken', () => {
+        nameTakenMsg.style.display = 'block';
+    });
     
-    elements.displays.currentQuestion.textContent = data.question;
+    socket.on('joined', (data) => {
+        playerName = data.name;
+        isAdmin = data.isAdmin;
+        
+        joinScreen.classList.add('hidden');
+        waitingScreen.classList.remove('hidden');
+        
+        if (isAdmin) {
+            startGameBtn.classList.remove('hidden');
+        }
+        
+        updatePlayers(data.gameState.players.map(p => p.name));
+    });
     
-    // Configurar pantalla de respuesta
-    elements.inputs.answer.value = "";
-    elements.inputs.answer.style.display = gameState.isCurrentAsker ? "none" : "block";
-    elements.buttons.submitAnswer.style.display = gameState.isCurrentAsker ? "none" : "block";
-    elements.displays.answerTimeLeft.textContent = gameState.isCurrentAsker 
-        ? "Eres el autor de la pregunta, no respondes esta ronda" 
-        : "30";
+    socket.on('updatePlayers', (players) => {
+        updatePlayers(players);
+    });
     
-    toggleScreen("question", false);
-    toggleScreen("answer", true);
+    socket.on('gamePhaseChanged', (data) => {
+        currentPhase = data.phase;
+        
+        // Ocultar todas las pantallas primero
+        waitingScreen.classList.add('hidden');
+        questionScreen.classList.add('hidden');
+        answerScreen.classList.add('hidden');
+        voteScreen.classList.add('hidden');
+        resultsScreen.classList.add('hidden');
+        gameOverScreen.classList.add('hidden');
+        
+        // Mostrar la pantalla correspondiente a la fase actual
+        switch (currentPhase) {
+            case 'waiting':
+                waitingScreen.classList.remove('hidden');
+                break;
+            case 'question':
+                questionScreen.classList.remove('hidden');
+                questionTimer.textContent = data.timeLeft;
+                questionInput.value = '';
+                break;
+            case 'answer':
+                answerScreen.classList.remove('hidden');
+                currentQuestion.innerHTML = `<strong>Pregunta de ${data.question.author}:</strong> ${data.question.text}`;
+                answerTimer.textContent = data.timeLeft;
+                answerInput.value = '';
+                break;
+            case 'vote':
+                voteScreen.classList.remove('hidden');
+                voteTimer.textContent = data.timeLeft;
+                renderAnswersToVote(data.answers);
+                break;
+            case 'results':
+                resultsScreen.classList.remove('hidden');
+                renderRankedAnswers(data.rankedAnswers);
+                renderScoreboard(data.scores);
+                break;
+            case 'gameOver':
+                gameOverScreen.classList.remove('hidden');
+                renderFinalScoreboard(data.scores);
+                break;
+        }
+    });
     
-    if (!gameState.isCurrentAsker) {
-        startAnswerTimer();
+    socket.on('timerUpdate', (timeLeft) => {
+        switch (currentPhase) {
+            case 'question':
+                questionTimer.textContent = timeLeft;
+                break;
+            case 'answer':
+                answerTimer.textContent = timeLeft;
+                break;
+            case 'vote':
+                voteTimer.textContent = timeLeft;
+                break;
+        }
+    });
+    
+    // Funciones
+    function joinGame() {
+        const name = playerNameInput.value.trim();
+        if (name) {
+            socket.emit('join', name);
+        }
+    }
+    
+    function startGame() {
+        socket.emit('startGame');
+    }
+    
+    function submitQuestion() {
+        const question = questionInput.value.trim();
+        if (question) {
+            socket.emit('submitQuestion', question);
+            submitQuestionBtn.disabled = true;
+        }
+    }
+    
+    function submitAnswer() {
+        const answer = answerInput.value.trim();
+        if (answer) {
+            socket.emit('submitAnswer', answer);
+            submitAnswerBtn.disabled = true;
+        }
+    }
+    
+    function updatePlayers(players) {
+        playersList.innerHTML = '';
+        players.forEach(player => {
+            const li = document.createElement('li');
+            li.textContent = player;
+            if (player === 'Facu') {
+                li.style.fontWeight = 'bold';
+                li.style.color = '#28a745';
+            }
+            playersList.appendChild(li);
+        });
+    }
+    
+    function renderAnswersToVote(answers) {
+        answersToVote.innerHTML = '';
+        Object.entries(answers).forEach(([player, answer]) => {
+            if (player !== playerName) { // No votar tu propia respuesta
+                const div = document.createElement('div');
+                div.className = 'answer-option';
+                div.innerHTML = `
+                    <p><strong>${player}:</strong> ${answer}</p>
+                `;
+                div.addEventListener('click', () => {
+                    document.querySelectorAll('.answer-option').forEach(el => {
+                        el.classList.remove('selected');
+                    });
+                    div.classList.add('selected');
+                    socket.emit('submitVote', player);
+                });
+                answersToVote.appendChild(div);
+            }
+        });
+    }
+    
+    function renderRankedAnswers(rankedAnswers) {
+        rankedAnswers.innerHTML = '';
+        rankedAnswers.forEach((item, index) => {
+            const div = document.createElement('div');
+            div.className = 'ranked-answer';
+            div.innerHTML = `
+                <p><strong>#${index + 1}: ${item.player}</strong> (${item.votes} votos)</p>
+                <p>${item.answer}</p>
+            `;
+            rankedAnswers.appendChild(div);
+        });
+    }
+    
+    function renderScoreboard(scores) {
+        scoreboardBody.innerHTML = '';
+        const sortedPlayers = Object.entries(scores).sort((a, b) => b[1] - a[1]);
+        sortedPlayers.forEach(([player, score]) => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${player}</td>
+                <td>${score}</td>
+            `;
+            if (player === 'Facu') {
+                tr.style.fontWeight = 'bold';
+                tr.querySelector('td:first-child').style.color = '#28a745';
+            }
+            scoreboardBody.appendChild(tr);
+        });
+    }
+    
+    function renderFinalScoreboard(scores) {
+        finalScoreboardBody.innerHTML = '';
+        const sortedPlayers = Object.entries(scores).sort((a, b) => b[1] - a[1]);
+        sortedPlayers.forEach(([player, score], index) => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${index === 0 ? '🏆 ' : ''}${player}</td>
+                <td>${score}</td>
+            `;
+            if (player === 'Facu') {
+                tr.style.fontWeight = 'bold';
+                tr.querySelector('td:first-child').style.color = '#28a745';
+            }
+            finalScoreboardBody.appendChild(tr);
+        });
     }
 });
-
-socket.on("start-vote-phase", (data) => {
-    gameState.answers = data.answers;
-    gameState.hasSubmitted.vote = false;
-    
-    // Mostrar todas las respuestas y permitir votar a todos (incluyendo al autor de la pregunta)
-    elements.displays.answers.innerHTML = data.answers.map((a, i) => `
-        <div class="answer-item">
-            <p>${a.text}</p>
-            <button onclick="voteForAnswer(${i})" class="vote-btn">Votar</button>
-        </div>
-    `).join("");
-    
-    toggleScreen("answer", false);
-    toggleScreen("vote", true);
-    
-    // Iniciar timer de votación
-    startVoteTimer();
-});
-
-socket.on("show-results", (data) => {
-    // Mostrar resultados
-    toggleScreen("vote", false);
-    toggleScreen("results", true);
-    
-    elements.displays.rankedAnswers.innerHTML = data.rankedAnswers.map((a, i) => `
-        <p>${i + 1}. ${a.text} (${a.votes} votos)</p>
-    `).join("");
-    
-    updateScoreboard(data.scores);
-    
-    // Ocultar después de 5 segundos (solo si no es la última ronda)
-    setTimeout(() => {
-        if (elements.screens.results.classList.contains("hidden")) return;
-        toggleScreen("results", false);
-    }, 5000);
-});
-
-function startVoteTimer() {
-    let time = 60;
-    const timerDisplay = document.createElement("p");
-    timerDisplay.innerHTML = `Tiempo para votar: <span id="vote-time">${time}</span>s`;
-    elements.displays.answers.prepend(timerDisplay);
-    
-    gameState.timers.vote = setInterval(() => {
-        time--;
-        document.getElementById("vote-time").textContent = time;
-        
-        if (time <= 0) {
-            clearInterval(gameState.timers.vote);
-            // Auto-votar si no lo ha hecho
-            if (!gameState.hasSubmitted.vote) {
-                voteForAnswer(0); // Vota la primera respuesta por defecto
-            }
-        }
-    }, 1000);
-}
-
-socket.on("game-over", (finalScores) => {
-    toggleScreen("results", false);
-    toggleScreen("gameOver", true);
-    elements.displays.finalScoreboard.innerHTML = Object.entries(finalScores)
-        .sort((a, b) => b[1] - a[1])
-        .map(([name, points]) => `<p>${name}: ${points} puntos</p>`)
-        .join("");
-});
-
-// ==================== INICIALIZACIÓN ====================
-window.voteForAnswer = voteForAnswer;
