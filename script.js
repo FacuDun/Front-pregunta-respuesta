@@ -83,7 +83,15 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     
     socket.on('gamePhaseChanged', (data) => {
+        console.log("Fase cambiada a:", data.phase, "Datos recibidos:", data);
+
+
+        // CONSOLA
+        if (data.phase === 'vote') {
+            console.log("Respuestas recibidas para votar:", data.answers);
+        }
         currentPhase = data.phase;
+        //
 
         // Resetear botones cuando cambia la fase
         submitQuestionBtn.disabled = false;
@@ -207,31 +215,29 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     function renderAnswersToVote(answers) {
+        console.log("Renderizando respuestas para votar:", answers); // DEBUG
+        
         answersToVote.innerHTML = '';
         
-        // Verificar si hay respuestas
-        if (Object.keys(answers).length === 0) {
-            answersToVote.innerHTML = '<p>No hay respuestas para votar.</p>';
+        if (!answers || Object.keys(answers).length === 0) {
+            answersToVote.innerHTML = '<p>No hay respuestas disponibles para votar.</p>';
             return;
         }
         
         Object.entries(answers).forEach(([player, answer]) => {
-            // Asegurarnos de no mostrar la respuesta del autor
-            if (player !== gameState.currentQuestion.author) {
-                const div = document.createElement('div');
-                div.className = 'answer-option';
-                div.innerHTML = `
-                    <p><strong>${player}:</strong> ${answer}</p>
-                `;
-                div.addEventListener('click', () => {
-                    document.querySelectorAll('.answer-option').forEach(el => {
-                        el.classList.remove('selected');
-                    });
-                    div.classList.add('selected');
-                    socket.emit('submitVote', player);
+            const div = document.createElement('div');
+            div.className = 'answer-option';
+            div.innerHTML = `<p><strong>${player}:</strong> ${answer}</p>`;
+            
+            div.addEventListener('click', () => {
+                document.querySelectorAll('.answer-option').forEach(el => {
+                    el.classList.remove('selected');
                 });
-                answersToVote.appendChild(div);
-            }
+                div.classList.add('selected');
+                socket.emit('submitVote', player);
+            });
+            
+            answersToVote.appendChild(div);
         });
     }
     
