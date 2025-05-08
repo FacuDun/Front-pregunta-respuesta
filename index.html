@@ -51,20 +51,24 @@
             <div id="answers-to-vote"></div>
         </div>
 
-        <!-- Fase de resultados -->
+        <!-- Fase de resultados (versión corregida) -->
         <div id="results-screen" class="screen hidden">
             <h2>Resultados</h2>
-            <div id="ranked-answers"></div>
-            <div id="scoreboard">
-                <h3>Tabla de puntajes</h3>
-                <table>
+            <div id="ranked-answers" style="margin-bottom: 20px;"></div>
+            
+            <!-- Contenedor de la tabla mejorado -->
+            <div style="background: white; border-radius: 8px; padding: 15px; max-width: 500px; margin: 0 auto; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                <h3 style="margin-top: 0;">Tabla de puntajes</h3>
+                <table style="width: 100%; border-collapse: collapse;">
                     <thead>
-                        <tr>
-                            <th>Jugador</th>
-                            <th>Puntos</th>
+                        <tr style="background-color: #3498db; color: white;">
+                            <th style="padding: 10px; text-align: left;">Jugador</th>
+                            <th style="padding: 10px; text-align: left;">Puntos</th>
                         </tr>
                     </thead>
-                    <tbody id="scoreboard-body"></tbody>
+                    <tbody id="scoreboard-body" style="display: table-row-group;">
+                        <!-- Filas generadas por JavaScript -->
+                    </tbody>
                 </table>
             </div>
         </div>
