@@ -216,6 +216,42 @@ button:disabled {
 }
 
 
+/* Añade esto a tu archivo style.css */
+
+/* Contenedor de resultados */
+#results-screen {
+  min-height: 400px;  /* Altura mínima para evitar cortes */
+  overflow-y: auto;   /* Scroll si el contenido es muy largo */
+}
+
+/* Tabla de puntajes */
+#scoreboard {
+  width: 100%;
+  max-width: 500px;   /* Ancho máximo */
+  margin: 20px auto;  /* Centrado */
+  border-collapse: collapse;
+  background-color: white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+#scoreboard th, #scoreboard td {
+  padding: 12px 15px;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+}
+
+#scoreboard th {
+  background-color: #3498db;
+  color: white;
+  position: sticky;
+  top: 0;  /* Fija los encabezados al hacer scroll */
+}
+
+#scoreboard tbody tr:hover {
+  background-color: #f5f5f5;
+}
+
+
 
 
 
