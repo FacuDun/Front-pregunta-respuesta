@@ -85,9 +85,6 @@ document.addEventListener('DOMContentLoaded', () => {
     socket.on('gamePhaseChanged', (data) => {
         currentPhase = data.phase;
 
-
-
-    
         // Resetear botones cuando cambia la fase
         submitQuestionBtn.disabled = false;
         submitQuestionBtn.textContent = "Enviar pregunta";
@@ -114,12 +111,25 @@ document.addEventListener('DOMContentLoaded', () => {
                 questionTimer.textContent = data.timeLeft;
                 questionInput.value = '';
                 break;
+
             case 'answer':
                 answerScreen.classList.remove('hidden');
                 currentQuestion.innerHTML = `<strong>Pregunta de ${data.question.author}:</strong> ${data.question.text}`;
                 answerTimer.textContent = data.timeLeft;
                 answerInput.value = '';
+                
+                // Ocultar elementos si es el autor de la pregunta
+                if (playerName === data.question.author) {
+                    answerInput.style.display = 'none';
+                    submitAnswerBtn.style.display = 'none';
+                    document.querySelector('#answer-screen p:nth-of-type(2)').textContent = 
+                        "Eres el autor de esta pregunta, espera mientras los demás responden.";
+                } else {
+                    answerInput.style.display = 'block';
+                    submitAnswerBtn.style.display = 'block';
+                }
                 break;
+            
             case 'vote':
                 voteScreen.classList.remove('hidden');
                 voteTimer.textContent = data.timeLeft;
