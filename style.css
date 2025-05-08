@@ -20,22 +20,26 @@ body {
     box-sizing: border-box;
 }
 
+/* Pantallas */
 .screen {
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 1.5rem;
+    padding: 20px;
 }
 
 .hidden {
     display: none !important;
 }
 
+/* Tipografía */
 h1, h2, h3 {
     color: #2c3e50;
     margin: 0;
 }
 
+/* Formularios */
 input, textarea, button {
     padding: 0.75rem 1rem;
     border-radius: 5px;
@@ -58,6 +62,11 @@ button:hover {
     background-color: #2980b9;
 }
 
+button:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
 textarea {
     min-height: 100px;
     resize: vertical;
@@ -68,6 +77,7 @@ textarea {
     display: none;
 }
 
+/* Lista de jugadores */
 #players-list {
     width: 100%;
     max-width: 400px;
@@ -85,6 +95,7 @@ textarea {
     border-radius: 5px;
 }
 
+/* Preguntas y respuestas */
 #current-question {
     background-color: #f8f9fa;
     padding: 1rem;
@@ -115,6 +126,13 @@ textarea {
     background-color: #d4edda;
 }
 
+/* Resultados */
+#results-screen {
+    min-height: 400px;
+    overflow-y: auto;
+    width: 100%;
+}
+
 #ranked-answers {
     width: 100%;
     max-width: 600px;
@@ -126,62 +144,7 @@ textarea {
     border-radius: 5px;
 }
 
-.ranked-answer:nth-child(1) {
-    background-color: #d4edda;
-    border-left: 5px solid #28a745;
-}
-
-.ranked-answer:nth-child(2) {
-    background-color: #fff3cd;
-    border-left: 5px solid #ffc107;
-}
-
-.ranked-answer:nth-child(3) {
-    background-color: #f8d7da;
-    border-left: 5px solid #dc3545;
-}
-
-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 1rem;
-}
-
-th, td {
-    padding: 0.75rem;
-    text-align: left;
-    border-bottom: 1px solid #ddd;
-}
-
-th {
-    background-color: #f8f9fa;
-}
-
-#start-game-btn {
-    background-color: #28a745;
-}
-
-#start-game-btn:hover {
-    background-color: #218838;
-}
-
-button:disabled {
-    opacity: 0.7;
-    cursor: not-allowed;
-}
-
-#submit-question-btn.sent {
-    background-color: #6c757d;
-}
-
-#submit-answer-btn.sent {
-    background-color: #6c757d;
-}
-
-
-
-
-/* Estilos para el podio */
+/* Podio */
 .ranked-answer:nth-child(1) {
     background-color: #fff9e6;
     border-left: 5px solid #ffd700; /* Oro */
@@ -197,84 +160,56 @@ button:disabled {
     border-left: 5px solid #cd7f32; /* Bronce */
 }
 
-/* Estilo para la tabla de puntajes */
+/* Tabla de puntajes */
 #scoreboard {
-    margin-top: 2rem;
     width: 100%;
-    max-width: 400px;
+    max-width: 600px;
+    margin: 20px auto;
+    border-collapse: collapse;
+    background: white;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+#scoreboard th, #scoreboard td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid #eee;
 }
 
 #scoreboard th {
     background-color: #3498db;
     color: white;
-}
-
-/* Destacar al líder */
-#scoreboard tr:first-child {
-    font-weight: bold;
-    color: #28a745;
-}
-
-
-/* Añade esto a tu archivo style.css */
-
-/* Contenedor de resultados */
-#results-screen {
-  min-height: 400px;  /* Altura mínima para evitar cortes */
-  overflow-y: auto;   /* Scroll si el contenido es muy largo */
-}
-
-/* Tabla de puntajes */
-#scoreboard {
-  width: 100%;
-  max-width: 500px;   /* Ancho máximo */
-  margin: 20px auto;  /* Centrado */
-  border-collapse: collapse;
-  background-color: white;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-#scoreboard th, #scoreboard td {
-  padding: 12px 15px;
-  text-align: left;
-  border-bottom: 1px solid #ddd;
-}
-
-#scoreboard th {
-  background-color: #3498db;
-  color: white;
-  position: sticky;
-  top: 0;  /* Fija los encabezados al hacer scroll */
+    position: sticky;
+    top: 0;
 }
 
 #scoreboard tbody tr:hover {
-  background-color: #f5f5f5;
+    background-color: #f5f5f5;
 }
 
-/* Estilos específicos para la tabla de resultados */
-#scoreboard-body {
-    width: 100%;
+/* Botones especiales */
+#start-game-btn {
+    background-color: #28a745;
 }
 
-#scoreboard-body tr {
-    border-bottom: 1px solid #eee;
+#start-game-btn:hover {
+    background-color: #218838;
 }
 
-#scoreboard-body td {
-    padding: 10px;
-    background-color: white;
+/* Estado de botones enviados */
+#submit-question-btn.sent,
+#submit-answer-btn.sent {
+    background-color: #6c757d;
 }
 
-#results-screen {
-    overflow-y: auto; /* Permite scroll si es necesario */
-    min-height: 300px; /* Altura mínima */
+/* Mensaje cuando no hay datos */
+#scoreboard-body:empty::after {
+    content: "Cargando resultados...";
+    display: block;
+    padding: 20px;
+    color: #666;
+    text-align: center;
 }
-
-
-
-
-
-
 
 
 
