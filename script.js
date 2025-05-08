@@ -267,17 +267,24 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
     
-function renderScoreboard(scores) {
-    const scoreboardBody = document.getElementById('scoreboard-body');
-    scoreboardBody.innerHTML = '';  // Limpiar tabla
-
-    if (!scores || Object.keys(scores).length === 0) {
-        scoreboardBody.innerHTML = `
-            <tr>
-                <td colspan="2">No hay puntajes aún</td>
-            </tr>
-        `;
-        return;
+    function renderScoreboard(scores) {
+        const tbody = document.getElementById('scoreboard-body');
+        if (!tbody) return; // Validación de seguridad
+        
+        tbody.innerHTML = ''; // Limpiar tabla
+        
+        // Ordenar jugadores por puntaje (mayor a menor)
+        const sortedPlayers = Object.entries(scores || {}).sort((a, b) => b[1] - a[1]);
+        
+        // Generar filas de la tabla
+        sortedPlayers.forEach(([player, points]) => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${player}</td>
+                <td>${points}</td>
+            `;
+            tbody.appendChild(row);
+        });
     }
 
     // Ordenar jugadores por puntaje (de mayor a menor)
