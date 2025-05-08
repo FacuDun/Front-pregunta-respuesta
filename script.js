@@ -208,8 +208,16 @@ document.addEventListener('DOMContentLoaded', () => {
     
     function renderAnswersToVote(answers) {
         answersToVote.innerHTML = '';
+        
+        // Verificar si hay respuestas
+        if (Object.keys(answers).length === 0) {
+            answersToVote.innerHTML = '<p>No hay respuestas para votar.</p>';
+            return;
+        }
+        
         Object.entries(answers).forEach(([player, answer]) => {
-            if (player !== playerName) { // No votar tu propia respuesta
+            // Asegurarnos de no mostrar la respuesta del autor
+            if (player !== gameState.currentQuestion.author) {
                 const div = document.createElement('div');
                 div.className = 'answer-option';
                 div.innerHTML = `
