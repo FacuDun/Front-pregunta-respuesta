@@ -156,7 +156,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const question = questionInput.value.trim();
         if (question) {
             socket.emit('submitQuestion', question);
-            submitQuestionBtn.disabled = true;
+            submitQuestionBtn.disabled = true;  // Deshabilitar el botón
+            submitQuestionBtn.textContent = "Pregunta enviada";  // Cambiar texto
+            submitQuestionBtn.style.backgroundColor = "#6c757d";  // Cambiar color
         }
     }
     
@@ -164,7 +166,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const answer = answerInput.value.trim();
         if (answer) {
             socket.emit('submitAnswer', answer);
-            submitAnswerBtn.disabled = true;
+            submitAnswerBtn.disabled = true;  // Deshabilitar el botón
+            submitAnswerBtn.textContent = "Respuesta enviada";  // Cambiar texto
+            submitAnswerBtn.style.backgroundColor = "#6c757d";  // Cambiar color
         }
     }
     
