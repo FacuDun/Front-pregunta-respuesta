@@ -6,6 +6,52 @@
     <title>Juego de Preguntas y Respuestas</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <style>
+        /* Estilos adicionales para la tabla de resultados */
+        #results-screen {
+            min-height: 500px; /* Altura mínima garantizada */
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        #scoreboard {
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+            border-collapse: collapse;
+            background: white;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            overflow: visible; /* Asegura que todo el contenido sea visible */
+        }
+        
+        #scoreboard th {
+            background-color: #3498db;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            position: sticky;
+            top: 0;
+        }
+        
+        #scoreboard td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        #scoreboard tbody tr:hover {
+            background-color: #f5f5f5;
+        }
+        
+        #scoreboard-body {
+            display: table-row-group; /* Fuerza el comportamiento correcto */
+        }
+        
+        .screen {
+            overflow-y: auto; /* Permite scroll si el contenido es largo */
+            padding: 20px;
+        }
+    </style>
 </head>
 <body>
     <div id="app">
@@ -53,18 +99,21 @@
 
         <!-- Fase de resultados -->
         <div id="results-screen" class="screen hidden">
-            <h2>Resultados</h2>
-            <div id="ranked-answers"></div>
-            <div id="scoreboard">
-                <h3>Tabla de puntajes</h3>
-                <table>
+            <h2>Resultados de la Ronda</h2>
+            <div id="ranked-answers" style="margin-bottom: 30px;"></div>
+            
+            <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+                <h3 style="margin-top: 0; color: #2c3e50;">Tabla de Puntajes</h3>
+                <table id="scoreboard" style="width: 100%;">
                     <thead>
                         <tr>
-                            <th>Jugador</th>
-                            <th>Puntos</th>
+                            <th style="width: 70%;">Jugador</th>
+                            <th style="width: 30%;">Puntos</th>
                         </tr>
                     </thead>
-                    <tbody id="scoreboard-body"></tbody>
+                    <tbody id="scoreboard-body" style="display: table; width: 100%;">
+                        <!-- Las filas se insertarán aquí via JavaScript -->
+                    </tbody>
                 </table>
             </div>
         </div>
@@ -72,16 +121,18 @@
         <!-- Fin del juego -->
         <div id="game-over-screen" class="screen hidden">
             <h2>¡Juego terminado!</h2>
-            <div id="final-scoreboard">
-                <h3>Resultados finales</h3>
-                <table>
+            <div id="final-scoreboard" style="background: white; padding: 20px; border-radius: 8px; max-width: 600px; margin: 0 auto;">
+                <h3 style="margin-top: 0;">Resultados Finales</h3>
+                <table style="width: 100%;">
                     <thead>
                         <tr>
                             <th>Jugador</th>
                             <th>Puntos</th>
                         </tr>
                     </thead>
-                    <tbody id="final-scoreboard-body"></tbody>
+                    <tbody id="final-scoreboard-body">
+                        <!-- Las filas se insertarán aquí via JavaScript -->
+                    </tbody>
                 </table>
             </div>
         </div>
