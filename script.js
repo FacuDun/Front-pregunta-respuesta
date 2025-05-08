@@ -243,11 +243,24 @@ document.addEventListener('DOMContentLoaded', () => {
     
     function renderRankedAnswers(rankedAnswers) {
         rankedAnswers.innerHTML = '';
+        
+        if (!rankedAnswers || rankedAnswers.length === 0) {
+            rankedAnswers.innerHTML = '<p>No hay respuestas para mostrar.</p>';
+            return;
+        }
+        
         rankedAnswers.forEach((item, index) => {
             const div = document.createElement('div');
             div.className = 'ranked-answer';
+            
+            // Ícono de podio para los primeros 3 lugares
+            let podiumIcon = '';
+            if (index === 0) podiumIcon = '🥇';
+            else if (index === 1) podiumIcon = '🥈';
+            else if (index === 2) podiumIcon = '🥉';
+            
             div.innerHTML = `
-                <p><strong>#${index + 1}: ${item.player}</strong> (${item.votes} votos)</p>
+                <p><strong>${podiumIcon} #${index + 1}: ${item.player}</strong> (${item.votes} voto${item.votes !== 1 ? 's' : ''})</p>
                 <p>${item.answer}</p>
             `;
             rankedAnswers.appendChild(div);
@@ -256,17 +269,30 @@ document.addEventListener('DOMContentLoaded', () => {
     
     function renderScoreboard(scores) {
         scoreboardBody.innerHTML = '';
-        const sortedPlayers = Object.entries(scores).sort((a, b) => b[1] - a[1]);
-        sortedPlayers.forEach(([player, score]) => {
+        
+        const sortedPlayers = Object.entries(scores)
+            .sort((a, b) => b[1] - a[1]);
+        
+        sortedPlayers.forEach(([player, score], index) => {
             const tr = document.createElement('tr');
+            
+            // Ícono de podio para los primeros 3 lugares
+            let podiumIcon = '';
+            if (index === 0) podiumIcon = '👑 ';
+            else if (index === 1) podiumIcon = '🥈 ';
+            else if (index === 2) podiumIcon = '🥉 ';
+            
             tr.innerHTML = `
-                <td>${player}</td>
+                <td>${podiumIcon}${player}</td>
                 <td>${score}</td>
             `;
-            if (player === 'Facu') {
+            
+            // Destacar al jugador actual
+            if (player === playerName) {
                 tr.style.fontWeight = 'bold';
-                tr.querySelector('td:first-child').style.color = '#28a745';
+                tr.querySelector('td:first-child').style.color = '#3498db';
             }
+            
             scoreboardBody.appendChild(tr);
         });
     }
