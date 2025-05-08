@@ -84,7 +84,18 @@ document.addEventListener('DOMContentLoaded', () => {
     
     socket.on('gamePhaseChanged', (data) => {
         currentPhase = data.phase;
-        
+
+
+
+    
+        // Resetear botones cuando cambia la fase
+        submitQuestionBtn.disabled = false;
+        submitQuestionBtn.textContent = "Enviar pregunta";
+        submitQuestionBtn.style.backgroundColor = "";
+        submitAnswerBtn.disabled = false;
+        submitAnswerBtn.textContent = "Enviar respuesta";
+        submitAnswerBtn.style.backgroundColor = "";
+    
         // Ocultar todas las pantallas primero
         waitingScreen.classList.add('hidden');
         questionScreen.classList.add('hidden');
