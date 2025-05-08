@@ -267,35 +267,32 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
     
-    function renderScoreboard(scores) {
-        scoreboardBody.innerHTML = '';
-        
-        const sortedPlayers = Object.entries(scores)
-            .sort((a, b) => b[1] - a[1]);
-        
-        sortedPlayers.forEach(([player, score], index) => {
-            const tr = document.createElement('tr');
-            
-            // Ícono de podio para los primeros 3 lugares
-            let podiumIcon = '';
-            if (index === 0) podiumIcon = '👑 ';
-            else if (index === 1) podiumIcon = '🥈 ';
-            else if (index === 2) podiumIcon = '🥉 ';
-            
-            tr.innerHTML = `
-                <td>${podiumIcon}${player}</td>
-                <td>${score}</td>
-            `;
-            
-            // Destacar al jugador actual
-            if (player === playerName) {
-                tr.style.fontWeight = 'bold';
-                tr.querySelector('td:first-child').style.color = '#3498db';
-            }
-            
-            scoreboardBody.appendChild(tr);
-        });
+function renderScoreboard(scores) {
+    const scoreboardBody = document.getElementById('scoreboard-body');
+    scoreboardBody.innerHTML = '';  // Limpiar tabla
+
+    if (!scores || Object.keys(scores).length === 0) {
+        scoreboardBody.innerHTML = `
+            <tr>
+                <td colspan="2">No hay puntajes aún</td>
+            </tr>
+        `;
+        return;
     }
+
+    // Ordenar jugadores por puntaje (de mayor a menor)
+    const sortedPlayers = Object.entries(scores).sort((a, b) => b[1] - a[1]);
+
+    // Llenar la tabla
+    sortedPlayers.forEach(([player, points]) => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${player}</td>
+            <td>${points}</td>
+        `;
+        scoreboardBody.appendChild(row);
+    });
+}
     
     function renderFinalScoreboard(scores) {
         finalScoreboardBody.innerHTML = '';
