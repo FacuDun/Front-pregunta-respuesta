@@ -164,3 +164,20 @@ th {
 #start-game-btn:hover {
     background-color: #218838;
 }
+
+
+
+
+
+button:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+#submit-question-btn.sent {
+    background-color: #6c757d;
+}
+
+#submit-answer-btn.sent {
+    background-color: #6c757d;
+}
